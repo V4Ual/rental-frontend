@@ -1,0 +1,322 @@
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  addPropertyApi,
+  editPropertyApi,
+  getPropertyType,
+  getRoomTypeList,
+} from "../../services/propery/TypeService";
+import { toast } from "react-toastify";
+
+const EditRoom = () => {
+  const location = useLocation();
+  const stateData = location.state;
+  const navigate = useNavigate();
+  const [propertyType, setPropertyType] = useState();
+  const [roomType, setRoomType] = useState();
+  const [addProperty, setAddProperty] = useState();
+
+  const fetchRoomType = async () => {
+    if (addProperty?.propertyTypeId !== "") {
+      const RT = await getRoomTypeList(addProperty?.propertyTypeId);
+      if (RT.success) {
+        setRoomType(RT.data);
+      }
+    }
+  };
+  useEffect(() => {
+    fetchRoomType();
+  }, [addProperty?.propertyTypeId]);
+
+  useEffect(() => {
+    setAddProperty({
+      propertyId: stateData.id,
+      propertyTypeId: stateData.type_fk,
+      roomTypeId: stateData.room_type_fk,
+      propertyName: stateData.name,
+      address: stateData.address,
+      noOfRoom: stateData.no_of_room,
+      roomNumber: stateData.property_room_no.map((item) => item.room_no),
+      image: stateData.property_images,
+      delateImage: [],
+    });
+  }, []);
+
+  //   console.log({ stateData });
+
+  const fetchPropertyType = async () => {
+    const PT = await getPropertyType();
+    if (PT.success) {
+      setPropertyType(PT.data);
+    }
+  };
+  useEffect(() => {
+    fetchPropertyType();
+  }, []);
+
+  const handleChangeInput = (e, index) => {
+    const { value, id, name, files } = e.target;
+    if (name === "roomNumber") {
+      console.log("====================", { [name]: value }, index);
+      setAddProperty((previous) => {
+        const updatedRoomNumbers = [...(previous.roomNumber || [])]; // Ensure it's an array
+        updatedRoomNumbers[index] = value; // Update the specific index
+        return { ...previous, roomNumber: updatedRoomNumbers };
+      });
+    } else if (name === "image") {
+      const image = Array.from(files);
+      setAddProperty((previous) => ({
+        ...previous,
+        image: [...previous.image, ...image],
+      }));
+    } else if (name === "noOfRoom") {
+      //   setTimeout(() => {
+      //     roomCreate(value, addProperty.roomNumber);
+      //   }, 1000);
+
+      setAddProperty((previousState) => ({ ...previousState, [name]: value }));
+    } else {
+      setAddProperty((previous) => ({ ...previous, [name]: value }));
+    }
+  };
+
+  console.log({ addProperty });
+
+  const handleSubmit = async () => {
+    let formData = new FormData();
+
+    formData.append("propertyId", addProperty.propertyId);
+    formData.append("name", addProperty.propertyName);
+    formData.append("address", addProperty.address);
+    formData.append("noOfRoom", addProperty.noOfRoom);
+    formData.append("propertyTypeId", addProperty.propertyTypeId);
+    formData.append("roomTypeId", addProperty.roomTypeId);
+
+    for (let i = 0; i < addProperty?.image?.length; i++) {
+      console.log(
+        (typeof addProperty?.image[i]) instanceof File,
+        "??????????????????",
+      );
+
+      if (addProperty?.image[i] instanceof File) {
+        console.log("run it -<<<<<<<<<<<");
+
+        formData.append("propertyImage", addProperty?.image[i]);
+      }
+    }
+    if (addProperty?.delateImage && addProperty.delateImage.length > 0) {
+      addProperty.delateImage.forEach((image, index) => {
+        formData.append(`delateImage[${index}]`, image);
+      });
+    }
+
+    for (let [key, value] of formData) {
+      console.log(key, value);
+    }
+    const createProperty = await editPropertyApi(formData);
+    if (createProperty.success) {
+      toast.success(createProperty.message);
+      navigate(-1);
+      // setAddProperty({
+      //   propertyTypeId: "",
+      //   roomTypeId: "",
+      //   propertyName: "",
+      //   address: "",
+      //   noOfRoom: "",
+      //   roomNumber: [],
+      //   image: [],
+      // });
+    } else {
+      toast.error(createProperty.message);
+    }
+  };
+  const handleImageRemove = (index, src) => {
+    console.log(src instanceof File, ":::::::::::");
+
+    if (!(src instanceof File)) {
+      setAddProperty((previousState) => ({
+        ...(previousState || []),
+        delateImage: [...previousState.delateImage, src.id],
+      }));
+    }
+    setAddProperty((prev) => ({
+      ...prev,
+      image: prev.image.filter((_, i) => i !== index),
+    }));
+  };
+
+  return (
+    <div className="fixed max-h-full w-full overflow-scroll rounded-lg bg-[#e5e7eb] shadow">
+      <div className="z-10 mb-[100px] max-h-full items-center justify-between overflow-auto rounded-t border-b p-4 md:p-5">
+        <h3 className="w-full text-center text-xl font-semibold text-gray-900 sm:text-lg md:text-2xl">
+          Edit Property
+        </h3>
+        <div className="bottom-[10rem] col-span-2 max-w-full space-y-4 overflow-auto p-4 md:p-5">
+          <div className="mx-auto grid max-w-3xl grid-cols-2 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2">
+            <div className="col-span-2 md:col-span-1">
+              <h1 className="mb-2 text-sm font-bold text-black md:text-xl">
+                Select Property Types
+              </h1>
+
+              <select
+                onChange={(e) => handleChangeInput(e)}
+                id="property"
+                name="propertyTypeId"
+                value={addProperty?.propertyTypeId}
+                className="w-full rounded-full border-2 border-black p-2 px-5 md:p-4"
+              >
+                {propertyType &&
+                  propertyType.map((item, index) => {
+                    return (
+                      <option id={item.id} key={item.id} value={item.id}>
+                        {item.name}
+                      </option>
+                    );
+                  })}
+              </select>
+            </div>
+            {roomType?.length > 0 && (
+              <div className="col-span-2 md:col-span-1">
+                <div className="mb-5">
+                  <h1 className="mb-2 text-sm font-bold text-black md:text-xl">
+                    Select Room Type
+                  </h1>
+
+                  <select
+                    onChange={(e) => handleChangeInput(e)}
+                    id="property"
+                    name="roomTypeId"
+                    value={addProperty?.roomTypeId}
+                    className="w-full rounded-full border-2 border-black p-2 px-5 md:p-4"
+                  >
+                    {roomType &&
+                      roomType.map((item, index) => {
+                        return (
+                          <option key={index} value={item.id}>
+                            {item.name}
+                          </option>
+                        );
+                      })}
+                  </select>
+                </div>
+              </div>
+            )}
+            <div className="col-span-2 md:col-span-1">
+              <h1 className="mb-2 text-sm font-bold text-black md:text-xl">
+                Property Name
+              </h1>
+
+              <input
+                className="w-full rounded-full border-2 border-black p-2 px-5 md:p-4"
+                type="propertyName"
+                name="propertyName"
+                onChange={(e) => handleChangeInput(e)}
+                id="propertyName"
+                value={addProperty?.propertyName}
+                placeholder="ex. shreenath"
+              />
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <h1 className="mb-2 text-sm font-bold text-black md:text-xl">
+                Address
+              </h1>
+
+              <input
+                className="w-full rounded-full border-2 border-black p-2 px-5 md:p-4"
+                type="address"
+                name="address"
+                id="address"
+                value={addProperty?.address}
+                placeholder="Address"
+                required
+                onChange={(e) => handleChangeInput(e)}
+              />
+            </div>
+            <div className="col-span-2 md:col-span-1">
+              <h1 className="mb-2 text-sm font-bold text-black md:text-xl">
+                Number of Room
+              </h1>
+
+              <input
+                onChange={(e) => handleChangeInput(e)}
+                type="number"
+                name="noOfRoom"
+                id="noOfRoom"
+                className="w-full rounded-full border-2 border-black p-2 px-5 md:p-4"
+                value={addProperty?.noOfRoom}
+                placeholder="no of room"
+                required
+              />
+            </div>
+
+            <div className="col-span-2">
+              <label className="mb-2 block text-sm font-semibold text-black md:text-xl">
+                Upload Property Image
+              </label>
+              <input
+                type="file"
+                name="image"
+                multiple
+                size={2}
+                onChangeCapture={(e) => handleChangeInput(e)}
+                className="w-full cursor-pointer rounded border bg-white text-sm font-semibold text-gray-400 file:mr-4 file:cursor-pointer file:border-0 file:bg-gray-100 file:px-4 file:py-2.5 file:text-gray-600 file:hover:bg-gray-200"
+              />
+            </div>
+            <div className="col-span-2">
+              <h1 className="mb-2 block text-sm font-medium text-gray-900">
+                Image Preview
+              </h1>
+
+              <div className="relative w-full rounded-xl border-2 border-black">
+                {addProperty?.image?.map((src, index) => (
+                  <div
+                    key={index}
+                    className="m-2 inline-block h-[100px] w-[100px] rounded-lg border-2 border-cyan-500 p-2"
+                  >
+                    <img
+                      loading="lazy"
+                      src={
+                        src instanceof File
+                          ? URL.createObjectURL(src)
+                          : src.image
+                      }
+                      className="h-full w-full rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      className="relative left-[80px] top-[-101px] text-end"
+                      onClick={() => handleImageRemove(index, src)}
+                    >
+                      <i
+                        className="fa fa-times-circle text-lg text-red-500"
+                        aria-hidden="true"
+                      ></i>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="text-center">
+              <button
+                onClick={() => handleSubmit()}
+                className="rounded-full bg-gray-600 p-2 px-5"
+              >
+                <span className="text-white">Save</span>
+              </button>
+            </div>
+            <div className="text-center">
+              <button
+                onClick={() => navigate(-1)}
+                className="rounded-full bg-gray-600 p-2 px-5"
+              >
+                <span className="text-white">Cancel</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default EditRoom;
