@@ -7,12 +7,10 @@ export const axiosService = axios.create({
 
 axiosService.interceptors.request.use((config) => {
   try {
-    console.log({config});
-    config.headers["requesttoken"] = "610904831af1a01c5251e5437c53421338a01032a0c01bcc7db9da73368e339b";
+    config.headers["requesttoken"] = import.meta.env.VITE_REQUEST_TOKEN
     if(config.headers.Authorization == null){
       const token =  getLocalStorage("token")
       config.headers["authorization"] = `Bearer ${token}`;
-      
     }
     return config;
   } catch (error) {

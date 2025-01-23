@@ -214,13 +214,6 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* <CardComponent />
-        <CardComponent />
-        <CardComponent />
-        <CardComponent />
-        <CardComponent />
-        <CardComponent />
-        <CardComponent /> */}
       </div>
       <div className="relative bottom-[300px] hidden w-full justify-between space-x-10 px-2 text-center md:inline-flex">
         <button

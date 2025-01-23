@@ -5,17 +5,11 @@ import { getLocalStorage } from "../utils/localData.util";
 
 const ProtectedRoutes = ({ children, auth }) => {
   const location =   useLocation()
-  // const token = true;
-  console.log(location);
   if(location.pathname == "/"){
     return <Navigate to="/singup" replace={true} />;
   }
   
   const token  =  getLocalStorage('token') === 'undefined' ||  getLocalStorage('token') === null ?  false :  true || false
-
-  // false,true
-  // true false
-
   
   if (auth && !token) {
     

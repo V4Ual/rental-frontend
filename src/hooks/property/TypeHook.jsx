@@ -7,16 +7,13 @@ import {
 } from "../../services/propery/TypeService";
 import { toast } from "react-toastify";
 import { listTenantApi } from "../../services/propery/tenantService";
+import { useNavigate } from "react-router";
 
 export const getPropertyTypeHook = () => {
   const [roomNo, setRoomNo] = useState([]);
   const [dialog, setDialog] = useState(false);
   const [propertyType, setPropertyType] = useState();
   const [roomType, setRoomType] = useState();
-  const apartmentHook = propertyListHook("Apartment");
-  const commercialHook = propertyListHook("Commercial (Shops)");
-  const pgHook = propertyListHook("PG");
-  const bhadaHouseHook = propertyListHook("Bhada House");
   const [addProperty, setAddProperty] = useState({
     propertyTypeId: "",
     roomTypeId: "",
@@ -54,13 +51,7 @@ export const getPropertyTypeHook = () => {
     }
 
     setRoomNo(array.flat(Infinity));
-    // }
   };
-
-
-  //  useEffect(()=>{
-  //   roomCreate(addProperty.roomNumber,addProperty.roomNumber )
-  //  },[])
 
   const handleChangeInput = (e, index) => {
     const { value, id, name, files } = e.target;
@@ -145,6 +136,19 @@ export const getPropertyTypeHook = () => {
       toast.error(createProperty.message);
     }
   };
+  const navigate = useNavigate();
+  const handleEditDetails = async (type, id, whichOne) => {
+    const { getProperty } = type;
+    const propertyDetails = getProperty.find((item) => item.id == id);
+    navigate("/owner/property/room/edit", { state: propertyDetails });
+  };
+  const handleRoomShow = async (item) => {
+    navigate("/owner/property/room", {
+      state: item,
+    });
+  };
+
+
 
   return {
     dialog,
@@ -158,6 +162,8 @@ export const getPropertyTypeHook = () => {
     handleSubmit,
     handleImageRemove,
     setRoomNo,
+    handleEditDetails,
+    handleRoomShow
     
   };
 };
@@ -207,9 +213,7 @@ export const tenantListHook = (type) => {
 
   useEffect(() => {
     handlePropertyData();
-    // return()=>{
-    //   handlePropertyData()
-    // }
+
   }, []);
 
   return {

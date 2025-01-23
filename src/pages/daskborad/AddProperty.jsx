@@ -1,13 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import DashBoardLayout from "../../layouts/DashBoardLayout";
 import CardComponent from "../../Componets/CardComponent";
-import { Outlet, useNavigate } from "react-router-dom";
-import {
-  addPropertyApi,
-  getPropertyType,
-  getRoomTypeList,
-} from "../../services/propery/TypeService";
-import { toast } from "react-toastify";
+import {  useNavigate } from "react-router-dom";
+
 import {
   getPropertyTypeHook,
   propertyListHook,
@@ -25,7 +19,8 @@ const AddProperty = () => {
     handleImageRemove,
     roomNo,
     setDialog,
-    setRoomNo,
+    handleEditDetails,
+    handleRoomShow
   } = getPropertyTypeHook();
 
   const scrollContainerRef = useRef(null);
@@ -34,25 +29,6 @@ const AddProperty = () => {
   const pgHook = propertyListHook("PG");
   const bhadaHouseHook = propertyListHook("Bhada House");
 
-  // const { getProperty, setLoading, isLoading } = propertyListHook();
-  const navigate = useNavigate();
-
-  const handleEditDetails = async (type, id, whichOne) => {
-    console.log({ type, id });
-    const { getProperty } = type;
-
-    const propertyDetails = getProperty.find((item) => item.id == id);
-
-    navigate("/owner/property/room/edit", { state: propertyDetails });
-  };
-
-  const handleRoomShow = async (item) => {
-    navigate("/owner/property/room", {
-      state: item,
-    });
-  };
-
-  console.log({ addProperty });
 
   return (
     <>

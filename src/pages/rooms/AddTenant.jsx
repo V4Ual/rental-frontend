@@ -2,71 +2,11 @@ import React, { useState } from "react";
 import { createTenantApi } from "../../services/propery/tenantService";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
+import { AddTenantHook } from "../../hooks/Tenant/AddTenant";
 
 const AddTenant = () => {
-  const [addTenant, setAddTenant] = useState({});
-  const location = useLocation()
-  console.log({location});
-  
-  const navigation = useNavigate()
+  const { addTenant ,addTenantData,handleImageRemove,handleInputField,navigation } = AddTenantHook()
 
-  const handleInputField = (e) => {
-    const { files, value, name } = e.target;
-    if (name === "profilePic") {
-      setAddTenant((pre) => ({ ...pre, profile: files[0] }));
-    } else if (name === "document") {
-      console.log({ addTenant });
-
-      if (e.target.files.length > 2 || addTenant?.image?.length >= 2) {
-        alert("You can only upload up to 2 files.");
-        e.target.value = ""; // Clear the input
-      } else {
-        const document = Array.from(files);
-        setAddTenant((pre) => {
-          const updateImage = [...(pre?.image || []), ...document];
-          return { ...pre, image: [...updateImage] };
-        });
-      }
-    } else {
-      setAddTenant((pre) => ({ ...pre, [name]: value }));
-    }
-  };
-
-  const handleImageRemove = (index, single) => {
-    if (single) {
-      setAddTenant((pre) => ({ ...pre, profile: "" }));
-    } else {
-      const filter = addTenant?.image?.filter((_, item) => item != index);
-      setAddTenant((pre) => ({ ...pre, image: filter }));
-    }
-  };
-
-  const addTenantData = async () => {
-    let formData = new FormData();
-
-    formData.append("tenantName", addTenant.tenantName);
-    formData.append("roomId", location.state.id);
-    formData.append("phoneNumber", addTenant.phoneNumber);
-    formData.append("profilePic", addTenant.profile);
-    formData.append('phoneCode',"+91")
-
-    addTenant?.image.forEach((document, index) => {
-      formData.append("document", addTenant?.image[index]);
-    });
-
-    const submitData = await createTenantApi(formData);
-
-    if (submitData.success) {
-      navigation(-1)
-      toast.success(submitData.messages);
-    } else {
-      toast.error(submitData.messages);
-    }
-    for (let [key, value] of formData.entries()) {
-      console.log(`Key: ${key}, Value: ${value}`);
-    }
-  };
-  console.log({ addTenant });
 
   return (
     <div className="fixed max-h-full w-full overflow-scroll rounded-lg bg-[#e5e7eb] shadow">
